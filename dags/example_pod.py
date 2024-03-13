@@ -18,6 +18,24 @@ from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from kubernetes.client import models as k8s
 
 
+workable_connection = BaseHook.get_connection("workable_eqtble_sandbox")
+greenhouse_connection = BaseHook.get_connection("greenhouse_eqtble_sandbox")
+
+snowflake_connection = SnowflakeHook.get_connection("snowflake_sandbox")
+snowflake_extra = json.loads(snowflake_connection.get_extra())
+
+env_vars = {
+    "SOURCES__GREENHOUSE__ACCESS_TOKEN": greenhouse_connection.password,
+    "SOURCES__WORKABLE__ACCESS_TOKEN": workable_connection.password,
+    "SOURCES__WORKABLE__SUBDOMAIN": workable_connection.host,
+    "DESTINATION__SNOWFLAKE__CREDENTIALS__DATABASE": snowflake_extra.get("database"),
+    "DESTINATION__SNOWFLAKE__CREDENTIALS__PASSWORD": snowflake_connection.password,
+    "DESTINATION__SNOWFLAKE__CREDENTIALS__USERNAME": snowflake_connection.login,
+    "DESTINATION__SNOWFLAKE__CREDENTIALS__HOST": snowflake_extra.get("host"),
+    "DESTINATION__SNOWFLAKE__CREDENTIALS__WAREHOUSE": snowflake_extra.get("warehouse"),
+    "DESTINATION__SNOWFLAKE__CREDENTIALS__ROLE": snowflake_extra.get("role"),
+}
+
 with DAG(
     dag_id="greenhouse_eqtble_sandbox",
     start_date=datetime(2024, 1, 1),
@@ -27,39 +45,6 @@ with DAG(
     default_args={"owner": "Astro", "retries": 3},
     tags=["example"],
 ) as dag:
-
-
-    namespace = conf.get("kubernetes", "NAMESPACE")
-    # This will detect the default namespace locally and read the
-    # environment namespace when deployed to Astronomer.
-    if namespace == "default":
-        config_file = "/usr/local/airflow/include/.kube/config"
-        in_cluster = False
-    else:
-        in_cluster = True
-        config_file = None
-    
-    def init():
-        workable_connection =  BaseHook.get_connection("workable_eqtble_sandbox")
-        greenhouse_connection =  BaseHook.get_connection("greenhouse_eqtble_sandbox")
-
-        snowflake_connection =  SnowflakeHook.get_connection("snowflake_sandbox")
-        snowflake_extra = json.loads(snowflake_connection.get_extra())
-
-        env_vars = {
-            "SOURCES__GREENHOUSE__ACCESS_TOKEN": greenhouse_connection.password,
-            "SOURCES__WORKABLE__ACCESS_TOKEN": workable_connection.password,
-            "SOURCES__WORKABLE__SUBDOMAIN": workable_connection.host,
-            "DESTINATION__SNOWFLAKE__CREDENTIALS__DATABASE": snowflake_extra.get("database"),
-            "DESTINATION__SNOWFLAKE__CREDENTIALS__PASSWORD": snowflake_connection.password,
-            "DESTINATION__SNOWFLAKE__CREDENTIALS__USERNAME": snowflake_connection.login,
-            "DESTINATION__SNOWFLAKE__CREDENTIALS__HOST": snowflake_extra.get("host"),
-            "DESTINATION__SNOWFLAKE__CREDENTIALS__WAREHOUSE": snowflake_extra.get("warehouse"),
-            "DESTINATION__SNOWFLAKE__CREDENTIALS__ROLE": snowflake_extra.get("role"),
-        }
-
-        return env_vars
-
     KubernetesPodOperator(
         namespace=namespace,
         # image="eqtble_dlt:latest",
