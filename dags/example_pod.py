@@ -40,39 +40,43 @@ with DAG(
     tags=["example"],
 ) as dag:
     
+    def init():
+        workable_connection = Connection.get_connection_from_secrets("workable_eqtble_sandbox")
+        greenhouse_connection = Connection.get_connection_from_secrets("greenhouse_eqtble_sandbox")
 
-    workable_connection = Connection.get_connection_from_secrets("workable_eqtble_sandbox")
-    greenhouse_connection = Connection.get_connection_from_secrets("greenhouse_eqtble_sandbox")
+        snowflake_connection = Connection.get_connection_from_secrets("snowflake_sandbox")
+        snowflake_extra = json.loads(snowflake_connection.get_extra())
 
-    snowflake_connection = Connection.get_connection_from_secrets("snowflake_sandbox")
-    snowflake_extra = json.loads(snowflake_connection.get_extra())
+        env_vars = {
+            "SOURCES__GREENHOUSE__ACCESS_TOKEN": greenhouse_connection.password,
+            "SOURCES__WORKABLE__ACCESS_TOKEN": workable_connection.password,
+            "SOURCES__WORKABLE__SUBDOMAIN": workable_connection.host,
+            "DESTINATION__SNOWFLAKE__CREDENTIALS__DATABASE": snowflake_extra.get("database"),
+            "DESTINATION__SNOWFLAKE__CREDENTIALS__PASSWORD": snowflake_connection.password,
+            "DESTINATION__SNOWFLAKE__CREDENTIALS__USERNAME": snowflake_connection.login,
+            "DESTINATION__SNOWFLAKE__CREDENTIALS__HOST": snowflake_extra.get("host"),
+            "DESTINATION__SNOWFLAKE__CREDENTIALS__WAREHOUSE": snowflake_extra.get("warehouse"),
+            "DESTINATION__SNOWFLAKE__CREDENTIALS__ROLE": snowflake_extra.get("role"),
+        }
 
-    env_vars = {
-        "SOURCES__GREENHOUSE__ACCESS_TOKEN": greenhouse_connection.password,
-        "SOURCES__WORKABLE__ACCESS_TOKEN": workable_connection.password,
-        "SOURCES__WORKABLE__SUBDOMAIN": workable_connection.host,
-        "DESTINATION__SNOWFLAKE__CREDENTIALS__DATABASE": snowflake_extra.get("database"),
-        "DESTINATION__SNOWFLAKE__CREDENTIALS__PASSWORD": snowflake_connection.password,
-        "DESTINATION__SNOWFLAKE__CREDENTIALS__USERNAME": snowflake_connection.login,
-        "DESTINATION__SNOWFLAKE__CREDENTIALS__HOST": snowflake_extra.get("host"),
-        "DESTINATION__SNOWFLAKE__CREDENTIALS__WAREHOUSE": snowflake_extra.get("warehouse"),
-        "DESTINATION__SNOWFLAKE__CREDENTIALS__ROLE": snowflake_extra.get("role"),
-    }
+        return KubernetesPodOperator(
+            namespace=namespace,
+            # image="eqtble_dlt:latest",
+            image="ghcr.io/untitled-data-company/eqtable-dlt:main",
+            image_pull_secrets=[k8s.V1LocalObjectReference("ghcr-login-secret")],
+            # labels={"<pod-label>": "<label-name>"},
+            name="airflow-test-pod",
+            task_id="task-one",
+            in_cluster=in_cluster,  # if set to true, will look in the cluster, if false, looks for file
+            cluster_context="docker-desktop",  # is ignored when in_cluster is set to True
+            config_file=config_file,
+            is_delete_operator_pod=False,
+            get_logs=True,
+            image_pull_policy="IfNotPresent",  # crucial to avoid pulling image from the non-existing local registry
+            env_vars=env_vars,
+            arguments=["greenhouse_pipeline.py"],
+        )
 
-    KubernetesPodOperator(
-        namespace=namespace,
-        # image="eqtble_dlt:latest",
-        image="ghcr.io/untitled-data-company/eqtable-dlt:main",
-        image_pull_secrets=[k8s.V1LocalObjectReference("ghcr-login-secret")],
-        # labels={"<pod-label>": "<label-name>"},
-        name="airflow-test-pod",
-        task_id="task-one",
-        in_cluster=in_cluster,  # if set to true, will look in the cluster, if false, looks for file
-        cluster_context="docker-desktop",  # is ignored when in_cluster is set to True
-        config_file=config_file,
-        is_delete_operator_pod=False,
-        get_logs=True,
-        image_pull_policy="IfNotPresent",  # crucial to avoid pulling image from the non-existing local registry
-        env_vars=env_vars,
-        arguments=["greenhouse_pipeline.py"],
-    )
+    dlt_task = init()
+
+    dlt_task
