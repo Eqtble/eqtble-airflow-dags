@@ -17,6 +17,16 @@ from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 
 from kubernetes.client import models as k8s
 
+namespace = conf.get("kubernetes", "NAMESPACE")
+# This will detect the default namespace locally and read the
+# environment namespace when deployed to Astronomer.
+if namespace == "default":
+    config_file = "/usr/local/airflow/include/.kube/config"
+    in_cluster = False
+else:
+    in_cluster = True
+    config_file = None
+
 
 workable_connection = BaseHook.get_connection("workable_eqtble_sandbox")
 greenhouse_connection = BaseHook.get_connection("greenhouse_eqtble_sandbox")
