@@ -15,6 +15,8 @@ from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
 from pendulum import datetime, duration
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 
+from kubernetes.client import models as k8s
+
 namespace = conf.get("kubernetes", "NAMESPACE")
 # This will detect the default namespace locally and read the
 # environment namespace when deployed to Astronomer.
@@ -25,7 +27,7 @@ else:
     in_cluster = True
     config_file = None
 
-    
+
 workable_connection = BaseHook.get_connection("workable_eqtble_sandbox")
 greenhouse_connection = BaseHook.get_connection("greenhouse_eqtble_sandbox")
 
@@ -53,20 +55,20 @@ with DAG(
     default_args={"owner": "Astro", "retries": 3},
     tags=["example"],
 ) as dag:
-    k = kubernetesPodOperator(
+    KubernetesPodOperator(
         namespace=namespace,
-        image="eqtble_dlt:latest",
+        # image="eqtble_dlt:latest",
+        image="ghcr.io/untitled-data-company/eqtable-dlt:main",
+        image_pull_secrets=[k8s.V1LocalObjectReference("ghcr-login-secret")],
         # labels={"<pod-label>": "<label-name>"},
         name="airflow-test-pod",
         task_id="task-one",
         in_cluster=in_cluster,  # if set to true, will look in the cluster, if false, looks for file
         cluster_context="docker-desktop",  # is ignored when in_cluster is set to True
         config_file=config_file,
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         image_pull_policy="IfNotPresent",  # crucial to avoid pulling image from the non-existing local registry
         env_vars=env_vars,
         arguments=["greenhouse_pipeline.py"],
     )
- 
-    k
