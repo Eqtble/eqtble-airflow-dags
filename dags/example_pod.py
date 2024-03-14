@@ -28,23 +28,7 @@ else:
     config_file = None
 
 
-workable_connection = BaseHook.get_connection("workable_eqtble_sandbox")
-greenhouse_connection = BaseHook.get_connection("greenhouse_eqtble_sandbox")
 
-snowflake_connection = SnowflakeHook.get_connection("snowflake_sandbox")
-snowflake_extra = json.loads(snowflake_connection.get_extra())
-
-env_vars = {
-    "SOURCES__GREENHOUSE__ACCESS_TOKEN": greenhouse_connection.password,
-    "SOURCES__WORKABLE__ACCESS_TOKEN": workable_connection.password,
-    "SOURCES__WORKABLE__SUBDOMAIN": workable_connection.host,
-    "DESTINATION__SNOWFLAKE__CREDENTIALS__DATABASE": snowflake_extra.get("database"),
-    "DESTINATION__SNOWFLAKE__CREDENTIALS__PASSWORD": snowflake_connection.password,
-    "DESTINATION__SNOWFLAKE__CREDENTIALS__USERNAME": snowflake_connection.login,
-    "DESTINATION__SNOWFLAKE__CREDENTIALS__HOST": snowflake_extra.get("host"),
-    "DESTINATION__SNOWFLAKE__CREDENTIALS__WAREHOUSE": snowflake_extra.get("warehouse"),
-    "DESTINATION__SNOWFLAKE__CREDENTIALS__ROLE": snowflake_extra.get("role"),
-}
 
 with DAG(
     dag_id="greenhouse_eqtble_sandbox",
@@ -55,6 +39,26 @@ with DAG(
     default_args={"owner": "Astro", "retries": 3},
     tags=["example"],
 ) as dag:
+    
+
+    workable_connection = Connection.get_connection_from_secrets("workable_eqtble_sandbox")
+    greenhouse_connection = Connection.get_connection_from_secrets("greenhouse_eqtble_sandbox")
+
+    snowflake_connection = Connection.get_connection_from_secrets("snowflake_sandbox")
+    snowflake_extra = json.loads(snowflake_connection.get_extra())
+
+    env_vars = {
+        "SOURCES__GREENHOUSE__ACCESS_TOKEN": greenhouse_connection.password,
+        "SOURCES__WORKABLE__ACCESS_TOKEN": workable_connection.password,
+        "SOURCES__WORKABLE__SUBDOMAIN": workable_connection.host,
+        "DESTINATION__SNOWFLAKE__CREDENTIALS__DATABASE": snowflake_extra.get("database"),
+        "DESTINATION__SNOWFLAKE__CREDENTIALS__PASSWORD": snowflake_connection.password,
+        "DESTINATION__SNOWFLAKE__CREDENTIALS__USERNAME": snowflake_connection.login,
+        "DESTINATION__SNOWFLAKE__CREDENTIALS__HOST": snowflake_extra.get("host"),
+        "DESTINATION__SNOWFLAKE__CREDENTIALS__WAREHOUSE": snowflake_extra.get("warehouse"),
+        "DESTINATION__SNOWFLAKE__CREDENTIALS__ROLE": snowflake_extra.get("role"),
+    }
+
     KubernetesPodOperator(
         namespace=namespace,
         # image="eqtble_dlt:latest",
