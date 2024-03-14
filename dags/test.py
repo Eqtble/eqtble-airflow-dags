@@ -22,7 +22,7 @@ else:
     
 
 with DAG(
-    dag_id="greenhouse_eqtble_sandbox",
+    dag_id="greenhouse_eqtble_sandbox2",
     start_date=datetime(2024, 1, 1),
     schedule="@daily",
     catchup=False,
