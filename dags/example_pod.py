@@ -41,10 +41,10 @@ with DAG(
 ) as dag:
     
     def init():
-        workable_connection = Connection.get_connection_from_secrets("workable_eqtble_sandbox")
-        greenhouse_connection = Connection.get_connection_from_secrets("greenhouse_eqtble_sandbox")
+        workable_connection =  BaseHook.get_connection("workable_eqtble_sandbox")
+        greenhouse_connection =  BaseHook.get_connection("greenhouse_eqtble_sandbox")
 
-        snowflake_connection = Connection.get_connection_from_secrets("snowflake_sandbox")
+        snowflake_connection =  SnowflakeHook.get_connection("snowflake_sandbox")
         snowflake_extra = json.loads(snowflake_connection.get_extra())
 
         env_vars = {
