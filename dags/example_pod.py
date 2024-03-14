@@ -59,24 +59,22 @@ with DAG(
             "DESTINATION__SNOWFLAKE__CREDENTIALS__ROLE": snowflake_extra.get("role"),
         }
 
-        return KubernetesPodOperator(
-            namespace=namespace,
-            # image="eqtble_dlt:latest",
-            image="ghcr.io/untitled-data-company/eqtable-dlt:main",
-            image_pull_secrets=[k8s.V1LocalObjectReference("ghcr-login-secret")],
-            # labels={"<pod-label>": "<label-name>"},
-            name="airflow-test-pod",
-            task_id="task-one",
-            in_cluster=in_cluster,  # if set to true, will look in the cluster, if false, looks for file
-            cluster_context="docker-desktop",  # is ignored when in_cluster is set to True
-            config_file=config_file,
-            is_delete_operator_pod=False,
-            get_logs=True,
-            image_pull_policy="IfNotPresent",  # crucial to avoid pulling image from the non-existing local registry
-            env_vars=env_vars,
-            arguments=["greenhouse_pipeline.py"],
-        )
+        return env_vars
 
-    dlt_task = init()
-
-    dlt_task
+    KubernetesPodOperator(
+        namespace=namespace,
+        # image="eqtble_dlt:latest",
+        image="ghcr.io/untitled-data-company/eqtable-dlt:main",
+        image_pull_secrets=[k8s.V1LocalObjectReference("ghcr-login-secret")],
+        # labels={"<pod-label>": "<label-name>"},
+        name="airflow-test-pod",
+        task_id="task-one",
+        in_cluster=in_cluster,  # if set to true, will look in the cluster, if false, looks for file
+        cluster_context="docker-desktop",  # is ignored when in_cluster is set to True
+        config_file=config_file,
+        is_delete_operator_pod=False,
+        get_logs=True,
+        image_pull_policy="IfNotPresent",  # crucial to avoid pulling image from the non-existing local registry
+        env_vars=init(),
+        arguments=["greenhouse_pipeline.py"],
+    )
