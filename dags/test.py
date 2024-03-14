@@ -8,6 +8,7 @@ from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
 )
 from pendulum import datetime, duration
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+from airflow.operators.python import PythonOperator
 
 namespace = conf.get("kubernetes", "NAMESPACE")
 # This will detect the default namespace locally and read the
@@ -51,7 +52,7 @@ with DAG(
 
     task1= PythonOperator(task_id="connection_imports", python_callable=importing_connections)
 
-    k = kubernetesPodOperator(
+    k = KubernetesPodOperator(
         namespace=namespace,
         image="eqtble_dlt:latest",
         # labels={"<pod-label>": "<label-name>"},
@@ -77,3 +78,4 @@ with DAG(
         arguments=["greenhouse_pipeline.py"],
     )
  
+    task1 >> k
