@@ -49,7 +49,7 @@ with DAG(
     schedule="@daily",
     catchup=False,
     doc_md=__doc__,
-    default_args={"owner": "Astro", "retries": 3},
+    default_args={"owner": "Eqtble", "retries": 3},
     tags=["example"],
 ) as dag:
     KubernetesPodOperator(
