@@ -12,6 +12,8 @@ from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
 )
 from pendulum import datetime
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+from airflow.hooks.base import BaseHook
+from airflow.models import Connection
 
 from kubernetes.client import models as k8s
 
@@ -25,8 +27,7 @@ else:
     in_cluster = True
     config_file = None
 
-
-snowflake_connection = SnowflakeHook.get_connection("snowflake_sandbox")
+snowflake_connection: Connection = BaseHook.get_connection("snowflake_sandbox")
 snowflake_extra = json.loads(snowflake_connection.get_extra())
 
 env_vars = {
