@@ -64,7 +64,7 @@ with DAG(
         config_file=config_file,
         is_delete_operator_pod=False,
         get_logs=True,
-        image_pull_policy="IfNotPresent",  # crucial to avoid pulling image from the non-existing local registry
+        image_pull_policy="Always",  # set to IfNotPresent to avoid pulling
         env_vars=env_vars,
         arguments=["greenhouse_pipeline.py"],
     )
