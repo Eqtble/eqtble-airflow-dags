@@ -66,4 +66,4 @@ with DAG(
         arguments=["pokemon_pipeline.py"],
     )
     import logging
-    logging.info("Here is the update")
+    logging.info("Here is the change!")
