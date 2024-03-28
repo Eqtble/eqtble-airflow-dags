@@ -59,7 +59,7 @@ with DAG(
         in_cluster=in_cluster,  # if set to true, will look in the cluster, if false, looks for file
         cluster_context="docker-desktop",  # is ignored when in_cluster is set to True
         config_file=config_file,
-        is_delete_operator_pod=False,
+        is_delete_operator_pod=True,
         get_logs=True,
         image_pull_policy="Always",  # IfNotPresent to avoid pulling image from the non-existing local registry
         env_vars=env_vars,
