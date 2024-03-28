@@ -48,8 +48,6 @@ with DAG(
     default_args={"owner": "UntitledDataCompany", "retries": 3},
     tags=["example"],
 ) as dag:
-    import logging
-    logging.info("Here is the update")
     KubernetesPodOperator(
         namespace=namespace,
         # image="eqtble_dlt:latest",
@@ -67,3 +65,5 @@ with DAG(
         env_vars=env_vars,
         arguments=["pokemon_pipeline.py"],
     )
+    import logging
+    logging.info("Here is the update")
