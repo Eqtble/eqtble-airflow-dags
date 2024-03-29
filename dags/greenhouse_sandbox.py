@@ -1,20 +1,20 @@
-'''
+"""
 ## Greenhouse Sandbox DAG
 
-Sample dag to import into K8S
-'''
+Imports Greenhouse Sandbox data into Snowflake
+"""
 
 import json
+
 from airflow import DAG
 from airflow.configuration import conf
 from airflow.hooks.base import BaseHook
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
-from pendulum import datetime, duration
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
-
 from kubernetes.client import models as k8s
+from pendulum import datetime
 
 namespace = conf.get("kubernetes", "NAMESPACE")
 # This will detect the default namespace locally and read the
@@ -53,7 +53,7 @@ with DAG(
 ) as dag:
     KubernetesPodOperator(
         namespace=namespace,
-        # image="eqtble_dlt:latest",
+        # image="eqtble_dlt:latest",  # local build
         image="ghcr.io/untitled-data-company/eqtable-dlt:main",
         image_pull_secrets=[k8s.V1LocalObjectReference("ghcr-login-secret")],
         # labels={"<pod-label>": "<label-name>"},
