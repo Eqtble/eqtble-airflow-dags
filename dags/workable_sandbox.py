@@ -33,6 +33,7 @@ snowflake_connection = SnowflakeHook.get_connection("snowflake_sandbox")
 snowflake_extra = json.loads(snowflake_connection.get_extra())
 
 env_vars = {
+    "RUNTIME__REQUEST_BACKOFF_FACTOR": "1.5",  # Multiplier applied to the exponential delays. Default is 1
     "SOURCES__WORKABLE__ACCESS_TOKEN": workable_connection.password,
     "SOURCES__WORKABLE__SUBDOMAIN": workable_connection.host,
     "DESTINATION__SNOWFLAKE__CREDENTIALS__DATABASE": snowflake_extra.get("database"),
